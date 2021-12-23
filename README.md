@@ -6,7 +6,7 @@ It creates an Anaconda environment, and installs as many dependencies from Pip a
 
 Most notably, Tensorflow is installed as described in [Apple's official documentation](https://developer.apple.com/metal/tensorflow-plugin/).
 
-At the time of writing, the only dependency that could neither be  satisfied from Pip nor Anaconda is `tensorflow-text`. Therefore, projects that rely on Rasa features utiliing tensorflow-text will not work.
+At the time of writing, the only dependency that could neither be  satisfied from Pip nor Anaconda is `tensorflow-text`. Therefore, projects that rely on Rasa features utilizing tensorflow-text will not work.
 
 ## Requirements
 
