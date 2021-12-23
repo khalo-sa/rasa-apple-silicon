@@ -14,10 +14,10 @@ You need to have the arm64 (Apple Silicon) version of [Miniforge](https://github
 
 ## Installation
 
-Create a new Python-environment based on one of the environment files in this repo. For instance, to install Rasa 3.0.3 run this command:
+Create a new Python-environment based on one of the environment files in this repo. For instance, to install Rasa 3.0.3 in a virtual env called `rasa303` run this command:
 
 ```bash
-conda env create --force -f https://raw.githubusercontent.com/khalo-sa/rasa-apple-silicon/main/3.0.3/environment.yml
+conda env create --name rasa303 -f https://raw.githubusercontent.com/khalo-sa/rasa-apple-silicon/main/3.0.3/environment.yml
 ```
 
 This will take some time. Once the environment is created, activate it via:
