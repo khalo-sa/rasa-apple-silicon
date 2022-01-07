@@ -4,3 +4,4 @@ wheels
 .ipynb_checkpoints
 .vscode
 *.ipynb
+__pycache__
