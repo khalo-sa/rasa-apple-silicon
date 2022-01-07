@@ -5,3 +5,4 @@ wheels
 .vscode
 *.ipynb
 __pycache__
+tmp

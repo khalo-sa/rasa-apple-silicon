@@ -26,7 +26,11 @@ def get_hardcoded(rasa_version: str) -> dict:
                 "dask": "==2021.11.2",
                 "aiohttp": ">=3.6,<3.7.4",
             },
-            "pip": {},
+            "pip": {
+                "/wheels/tensorflow_addons-0.14.0.dev0-cp38-cp38-linux_aarch64.whl": None,  # noqa
+                "/wheels/tensorflow-2.6.0-cp38-cp38-linux_aarch64.whl": None,
+            },
+            "uncomment": ["tensorflow", "tensorflow-text", "tensorflow-addons"],
             "channels": ["conda-forge", "noarch"],
             "name": "rasa" + "".join([c for c in rasa_version if c.isdigit()]),
         }
@@ -207,15 +211,19 @@ def to_yaml_string(yaml_object: dict) -> str:
 
     """
     deps_str = []
-    for name, version in yaml_object["conda"].items():
+    for name, version in sorted(yaml_object["conda"].items()):
         version = version or ""
-        deps_str.append(f"  - {name}{version}")
+        line = f"  - {name}{version}"
+        line = f"# {line}" if name in yaml_object["uncomment"] else line
+        deps_str.append(line)
     if yaml_object["pip"]:
         deps_str.append("  - pip")
         deps_str.append("  - pip:")
-    for name, version in yaml_object["pip"].items():
+    for name, version in sorted(yaml_object["pip"].items()):
         version = version or ""
-        deps_str.append(f"    - {name}{version}")
+        line = f"    - {name}{version}"
+        line = f"# {line}" if name in yaml_object["uncomment"] else line
+        deps_str.append(line)
     deps_str = "\n".join(deps_str)
 
     date_str = datetime.now().strftime("%c")
