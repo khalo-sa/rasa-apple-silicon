@@ -1,2 +1,6 @@
 wheels
 .DS_Store
+.venv
+.ipynb_checkpoints
+.vscode
+*.ipynb
