@@ -16,6 +16,14 @@ def main():
         help="Rasa Version",
     )
     parser.add_argument(
+        "-p",
+        "--platform",
+        default="docker",
+        choices=["docker", "native"],
+        type=str,
+        help="Target Platform. Allowed values are 'docker' (default), or 'native'. ",
+    )
+    parser.add_argument(
         "-o",
         "--output",
         default="./rasa-conda-env.yml",
@@ -39,7 +47,7 @@ def main():
     )
     args = parser.parse_args()
 
-    convert(args.rasa_version, include_dev=args.dev, extras=args.extras)
+    convert(args.rasa_version, args.platform, include_dev=args.dev, extras=args.extras)
 
 
 if __name__ == "__main__":

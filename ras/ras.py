@@ -8,32 +8,55 @@ import toml
 
 from ras import __version__
 import ras.poetry_semver as poetry_semver
-import yaml
 
 
-def get_hardcoded(rasa_version: str) -> dict:
+def get_hardcoded(platform: str, rasa_version: str) -> dict:
     if semver.compare(rasa_version, "3.0.3") in [0, 1] or semver.compare(
         rasa_version, "3.0.4"
     ) in [0, -1]:
-        hardcoded = {
-            "conda": {
-                "python": "==3.8.12",
-                "h5py": "==3.1.0",
-                "numpy": "==1.19.5",
-                "scikit-learn": "==0.24.2",
-                "uvloop": "==0.14",
-                "ruamel.yaml": ">=0.16.5,<0.17.0",
-                "dask": "==2021.11.2",
-                "aiohttp": ">=3.6,<3.7.4",
-            },
-            "pip": {
-                "/wheels/tensorflow_addons-0.14.0.dev0-cp38-cp38-linux_aarch64.whl": None,  # noqa
-                "/wheels/tensorflow-2.6.0-cp38-cp38-linux_aarch64.whl": None,
-            },
-            "uncomment": ["tensorflow", "tensorflow-text", "tensorflow-addons"],
-            "channels": ["conda-forge", "noarch"],
-            "name": "rasa" + "".join([c for c in rasa_version if c.isdigit()]),
-        }
+        if platform == "docker":
+            hardcoded = {
+                "conda": {
+                    "python": "==3.8.12",
+                    "h5py": "==3.1.0",
+                    "numpy": "==1.19.5",
+                    "scikit-learn": "==0.24.2",
+                    "uvloop": "==0.14",
+                    "ruamel.yaml": ">=0.16.5,<0.17.0",
+                    "dask": "==2021.11.2",
+                    "aiohttp": ">=3.6,<3.7.4",
+                },
+                "pip": {
+                    # "/wheels/tensorflow_addons-0.14.0.dev0-cp38-cp38-linux_aarch64.whl": None,  # noqa
+                    # "/wheels/tensorflow-2.6.0-cp38-cp38-linux_aarch64.whl": None,
+                    "https://github.com/KumaTea/tensorflow-aarch64/releases/download/v2.6/tensorflow-2.6.0-cp38-cp38-linux_aarch64.whl": None,  # noqa
+                    "https://github.com/Qengineering/TensorFlow-Addons-Raspberry-Pi_64-bit/raw/main/tensorflow_addons-0.14.0.dev0-cp38-cp38-linux_aarch64.whl": None,  # noqa
+                },
+                "uncomment": ["tensorflow", "tensorflow-text", "tensorflow-addons"],
+                "channels": ["conda-forge", "noarch"],
+                "name": "rasa" + "".join([c for c in rasa_version if c.isdigit()]),
+            }
+        else:
+            hardcoded = {
+                "conda": {
+                    "python": "==3.8.12",
+                    "numpy": "==1.19.5",
+                    "scikit-learn": "==0.24.2",
+                    "dask": "==2021.11.2",
+                    "tensorflow-deps": "==2.6.0",
+                    "scipy": ">=1.4.1,<2.0.0",
+                    "aiohttp": ">=3.6,<3.7.4",
+                },
+                "pip": {
+                    "tensorflow-macos": "==2.6.0",
+                    "tensorflow-metal": None,
+                    "tfa-nightly": None,
+                },
+                "uncomment": ["tensorflow", "tensorflow-text", "tensorflow-addons"],
+                "channels": ["conda-forge", "apple"],
+                "name": "rasa" + "".join([c for c in rasa_version if c.isdigit()]),
+            }
+
     else:
         raise ValueError(f"Version {rasa_version} not supported yet")
 
@@ -42,6 +65,7 @@ def get_hardcoded(rasa_version: str) -> dict:
 
 def convert(
     rasa_version: str = "3.0.4",
+    platform: str = "docker",
     include_dev: bool = False,
     extras: Optional[Iterable[str]] = None,
 ) -> str:
@@ -66,10 +90,10 @@ def convert(
 
     """
 
-    yaml_obj_stub = get_hardcoded(rasa_version)
+    yaml_obj_stub = get_hardcoded(platform, rasa_version)
 
     PYPROJECT_TOML = Path(f"./output/rasa_{rasa_version}_pyproject.toml")
-    CONDA_ENV = Path(f"./output/rasa_{rasa_version}_env.yml")
+    CONDA_ENV = Path(f"./output/{platform}/rasa_{rasa_version}_env.yml")
 
     with urllib.request.urlopen(
         f"https://github.com/RasaHQ/rasa/raw/{rasa_version}/pyproject.toml"
@@ -226,6 +250,12 @@ def to_yaml_string(yaml_object: dict) -> str:
         deps_str.append(line)
     deps_str = "\n".join(deps_str)
 
+    channels_str = []
+    for channel in yaml_object["channels"]:
+        line = f"  - {channel}"
+        channels_str.append(line)
+    channels_str = "\n".join(channels_str)
+
     date_str = datetime.now().strftime("%c")
     conda_yaml = f"""
 ###############################################################################
@@ -234,6 +264,8 @@ def to_yaml_string(yaml_object: dict) -> str:
 #       date: {date_str}
 ###############################################################################
 name: {yaml_object["name"]}
+channels:
+{channels_str}
 dependencies:
 {deps_str}
 """.lstrip()

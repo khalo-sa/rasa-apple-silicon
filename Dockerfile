@@ -1,28 +1,22 @@
-FROM condaforge/miniforge3:latest
-
 ARG RASA_VERSION="3.0.4"
 
-RUN apt update && apt install curl build-essential -y
+FROM "rasa-aarch64:conda-${RASA_VERSION}" as builder
 
-# install bazel to build dm-tree
-RUN set -ex \
-    && cd /tmp \
-    && wget https://github.com/bazelbuild/bazel/releases/download/3.7.2/bazel-3.7.2-linux-arm64 \
-    && chmod +x /tmp/bazel-3.7.2-linux-arm64 \
-    && mv /tmp/bazel-3.7.2-linux-arm64 /usr/bin/bazel \
-    && bazel version
+RUN conda install conda-pack
 
-WORKDIR /app
+# Use conda-pack to create a standalone env:
+RUN conda-pack --ignore-missing-files --name rasa -o /tmp/env.tar \
+    && mkdir /opt/venv \
+    && tar xf /tmp/env.tar -C /opt/venv \
+    && rm /tmp/env.tar
 
-COPY ./output/rasa_${RASA_VERSION}_env.yml ./env.yml
-COPY ./wheels/ /wheels
+# We've put venv in same path it'll be in final image,
+# so now fix up paths:
+RUN /opt/venv/bin/conda-unpack
 
-RUN conda env create --name rasa --file=./env.yml
+FROM ubuntu:20.04 as runner
 
-# https://pythonspeed.com/articles/activate-conda-dockerfile/
-SHELL ["conda", "run", "-n", "rasa", "/bin/bash", "-c"]
-RUN conda init && \
-    echo "conda activate rasa" >> ~/.bashrc && \
-    echo "export LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1" >> ~/.bashrc
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
-RUN pip install --no-deps rasa==${RASA_VERSION}
+

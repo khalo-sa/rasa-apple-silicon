@@ -1,38 +1,72 @@
-# Install Rasa on Macs with Apple Silicon 
+# Rasa on Macs with Apple Silicon (Native / Docker)
 
-As of December 2021, Rasa is not officially supported on Macs with ARM-based Apple Silicon processors. The solution described here should only be used as a (hacky) workaround until official support arrives.
+As of January 2022, Rasa is not officially supported on Macs with ARM-based Apple Silicon processors.
+The solution described here should only be used as a workaround until official support arrives.
+It has been tested on a Macbook Pro with M1 Processor.
 
-It creates an Anaconda environment, and installs as many dependencies from Pip as possible based on the `pyproject.toml` of a specific Rasa Version, e.g. [3.0.3](https://github.com/RasaHQ/rasa/blob/3.0.3/pyproject.toml). All others are fetched from the `conda-forge` and `apple` Anaconda channels.
+Docker, and native installation is supported. In both cases an Anaconda environment is created, and as many dependencies from Pip as possible are installed based on the `pyproject.toml` of a specific Rasa Version, e.g. [3.0.3](https://github.com/RasaHQ/rasa/blob/3.0.3/pyproject.toml).
+The remaining packages for which no `arm64`/`aarch64` wheels are available on PyPI are fetched from Anaconda channels (`conda-forge`, `noarch`, and `apple`).
 
-Most notably, Tensorflow is installed as described in [Apple's official documentation](https://developer.apple.com/metal/tensorflow-plugin/).
+At the time of writing, the only dependency that could neither be satisfied from Pip nor Anaconda is `tensorflow-text`.
+Therefore, projects that rely on Rasa features utilizing tensorflow-text will not work.
 
-At the time of writing, the only dependency that could neither be  satisfied from Pip nor Anaconda is `tensorflow-text`. Therefore, projects that rely on Rasa features utilizing tensorflow-text will not work.
+## First steps
 
-## Requirements
+Clone this repo, then have a look inside the `output` directory.
+The version numbers of the yaml files found inside `native`, and `docker` subdirectories
+tell you which Rasa version you can currently install natively, or via Docker.
+Choose a version and platform combination and then proceed to one of the next chapters.
 
-You need to have the arm64 (Apple Silicon) version of [Miniforge](https://github.com/conda-forge/miniforge) installed. Follow the installation steps on the linked Github page.
+## Native Installation
 
-## Installation
+You need to have the arm64 (Apple Silicon) version of [Miniforge](https://github.com/conda-forge/miniforge) installed.
+Follow the installation steps on the linked Github page.
 
-Create a new Python-environment based on one of the environment files in this repo. For instance, to install Rasa 3.0.3 in a virtual env called `rasa303` run this command:
-
-```bash
-conda env create --name rasa303 -f https://raw.githubusercontent.com/khalo-sa/rasa-apple-silicon/main/3.0.3/environment.yml
-```
-
-This will take some time. Once the environment is created, activate it via:
-
-```bash
-conda activate rasa303
-```
-
-Now install the exact version of Rasa via Pip without its dependencies, and you should be done!
+Store the Rasa version of your choice in an environment variable.
 
 ```bash
-pip install --no-deps rasa==3.0.3
+export RASA_VERSION=3.0.4
 ```
 
-To verify that it's working, create a new project via `rasa init`, and train it via `rasa train`.
+Create a conda environment with the Rasa dependencies based on the .
 
+```bash
+conda env create --name rasa-${RASA_VERSION} --file=output/native/rasa_${RASA_VERSION}_env.yml
+```
 
+Activate it
 
+```bash
+conda activate rasa-${RASA_VERSION}
+```
+
+Finally, install Rasa without its dependencies (we already installed them).
+
+```bash
+pip install --no-deps rasa==${RASA_VERSION}
+```
+
+Verify that its working by executing `rasa init`.
+
+## Docker
+
+Store the Rasa version of your choice in an environment variable.
+
+```bash
+export RASA_VERSION=3.0.4
+```
+
+Build the Docker image
+
+```bash
+docker build \
+    -t "rasa:${RASA_VERSION}-aarch64" \
+    --build-arg RASA_VERSION=${RASA_VERSION} \
+    -f Dockerfile .
+```
+
+Start a container:
+
+```bash
+docker run -it rasa:${RASA_VERSION}-aarch64 bash
+```
