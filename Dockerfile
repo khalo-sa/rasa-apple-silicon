@@ -8,11 +8,8 @@ RUN conda install conda-pack
 RUN conda-pack --ignore-missing-files --name rasa -o /tmp/env.tar \
     && mkdir /opt/venv \
     && tar xf /tmp/env.tar -C /opt/venv \
-    && rm /tmp/env.tar
-
-# We've put venv in same path it'll be in final image,
-# so now fix up paths:
-RUN /opt/venv/bin/conda-unpack
+    && rm /tmp/env.tar \
+    && /opt/venv/bin/conda-unpack
 
 FROM ubuntu:20.04 as runner
 
