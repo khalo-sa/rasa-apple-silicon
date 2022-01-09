@@ -56,17 +56,14 @@ Store the Rasa version of your choice in an environment variable.
 export RASA_VERSION=3.0.4
 ```
 
-Build the Docker image
+Run the build script.
 
 ```bash
-docker build \
-    -t "rasa:${RASA_VERSION}-aarch64" \
-    --build-arg RASA_VERSION=${RASA_VERSION} \
-    -f Dockerfile .
+./scripts/build-docker.sh
 ```
 
 Start a container:
 
 ```bash
-docker run -it rasa:${RASA_VERSION}-aarch64 bash
+docker run -it rasa-aarch64:${RASA_VERSION} bash
 ```

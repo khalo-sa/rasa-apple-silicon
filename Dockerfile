@@ -14,6 +14,9 @@ RUN conda-pack --ignore-missing-files --name rasa -o /tmp/env.tar \
 FROM ubuntu:20.04 as runner
 
 COPY --from=builder /opt/venv /opt/venv
+COPY --from=builder /usr/lib/aarch64-linux-gnu/libgomp.so.1 /usr/lib/aarch64-linux-gnu/libgomp.so.1
+RUN echo "export LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1" >> ~/.bashrc
+
 ENV PATH="/opt/venv/bin:$PATH"
 
-
+ENTRYPOINT ["/bin/bash"]
