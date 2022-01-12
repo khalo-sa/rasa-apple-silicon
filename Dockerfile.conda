@@ -26,7 +26,8 @@ RUN conda env create --file=./env.yml --name=rasa \
 # SHELL ["conda", "run", "-n", "rasa", "/bin/bash", "-c"]
 
 RUN conda init && \
-    echo "conda activate rasa" >> ~/.bashrc && \
-    echo "export LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1" >> ~/.bashrc
+    echo "conda activate rasa" >> ~/.bashrc
+
+ENV LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1
 
 ENTRYPOINT ["/bin/bash"]
