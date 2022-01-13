@@ -7,3 +7,4 @@ wheels
 __pycache__
 tmp
 output/*.toml
+*.pyc
