@@ -3,11 +3,12 @@ set -e
 RASA_VERSION=${RASA_VERSION:-3.0.4}
 
 docker build \
+    --target conda \
     -t "rasa-aarch64:conda-${RASA_VERSION}" \
     --build-arg RASA_VERSION=${RASA_VERSION} \
-    -f Dockerfile.conda .
+    .
 
 docker build \
     -t "rasa-aarch64:${RASA_VERSION}" \
     --build-arg RASA_VERSION=${RASA_VERSION} \
-    -f Dockerfile .
+    .

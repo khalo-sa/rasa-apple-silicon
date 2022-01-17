@@ -31,6 +31,7 @@ def get_hardcoded(platform: str, rasa_version: str) -> dict:
                     # "/wheels/tensorflow-2.6.0-cp38-cp38-linux_aarch64.whl": None,
                     "https://github.com/KumaTea/tensorflow-aarch64/releases/download/v2.6/tensorflow-2.6.0-cp38-cp38-linux_aarch64.whl": None,  # noqa
                     "https://github.com/Qengineering/TensorFlow-Addons-Raspberry-Pi_64-bit/raw/main/tensorflow_addons-0.14.0.dev0-cp38-cp38-linux_aarch64.whl": None,  # noqa
+                    # https://forum.rasa.com/t/problem-with-websockets/49570/14?u=khalo-sa
                     "sanic": "==21.6.0",
                     "Sanic-Cors": "==1.0.0",
                     "sanic-routing": "==0.7.0",
