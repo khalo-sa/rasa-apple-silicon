@@ -11,7 +11,7 @@ def main():
     parser.add_argument(
         "-v",
         "--rasa_version",
-        default="3.0.4",
+        default="3.0.5",
         type=str,
         help="Rasa Version",
     )

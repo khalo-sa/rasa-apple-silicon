@@ -12,7 +12,7 @@ import ras.poetry_semver as poetry_semver
 
 def get_hardcoded(platform: str, rasa_version: str) -> dict:
     if semver.compare(rasa_version, "3.0.3") in [0, 1] or semver.compare(
-        rasa_version, "3.0.4"
+        rasa_version, "3.0.5"
     ) in [0, -1]:
         if platform == "docker":
             hardcoded = {
@@ -31,7 +31,7 @@ def get_hardcoded(platform: str, rasa_version: str) -> dict:
                     # "/wheels/tensorflow-2.6.0-cp38-cp38-linux_aarch64.whl": None,
                     "https://github.com/KumaTea/tensorflow-aarch64/releases/download/v2.6/tensorflow-2.6.0-cp38-cp38-linux_aarch64.whl": None,  # noqa
                     "https://github.com/Qengineering/TensorFlow-Addons-Raspberry-Pi_64-bit/raw/main/tensorflow_addons-0.14.0.dev0-cp38-cp38-linux_aarch64.whl": None,  # noqa
-                    # https://forum.rasa.com/t/problem-with-websockets/49570/14?u=khalo-sa
+                    # https://forum.rasa.com/t/problem-with-websockets/49570/14?u
                     "sanic": "==21.6.0",
                     "Sanic-Cors": "==1.0.0",
                     "sanic-routing": "==0.7.0",
@@ -50,13 +50,22 @@ def get_hardcoded(platform: str, rasa_version: str) -> dict:
                     "tensorflow-deps": "==2.6.0",
                     "scipy": ">=1.4.1,<2.0.0",
                     "aiohttp": ">=3.6,<3.7.4",
+                    "psycopg2": ">=2.8.2,<2.10.0",
+                    "uvloop": "==0.16.0",
+                    "matplotlib": ">=3.1,<3.4",
+                    "regex": ">=2020.6,<2021.9",
                 },
                 "pip": {
                     "tensorflow-macos": "==2.6.0",
                     "tensorflow-metal": None,
                     "tfa-nightly": None,
                 },
-                "uncomment": ["tensorflow", "tensorflow-text", "tensorflow-addons"],
+                "uncomment": [
+                    "tensorflow",
+                    "tensorflow-text",
+                    "tensorflow-addons",
+                    "psycopg2-binary",
+                ],
                 "channels": ["conda-forge", "apple"],
                 "name": "rasa" + "".join([c for c in rasa_version if c.isdigit()]),
             }
@@ -68,7 +77,7 @@ def get_hardcoded(platform: str, rasa_version: str) -> dict:
 
 
 def convert(
-    rasa_version: str = "3.0.4",
+    rasa_version: str = "3.0.5",
     platform: str = "docker",
     include_dev: bool = False,
     extras: Optional[Iterable[str]] = None,

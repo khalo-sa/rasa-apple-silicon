@@ -1,6 +1,6 @@
 FROM condaforge/miniforge3:latest as conda
 
-ARG RASA_VERSION="3.0.4"
+ARG RASA_VERSION="3.0.5"
 
 RUN apt update && apt install curl build-essential -y
 

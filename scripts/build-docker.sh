@@ -1,6 +1,6 @@
 set -e
 
-RASA_VERSION=${RASA_VERSION:-3.0.4}
+RASA_VERSION=${RASA_VERSION:-3.0.5}
 
 docker build \
     --target conda \

@@ -4,7 +4,7 @@ As of January 2022, Rasa is not officially supported on Macs with ARM-based Appl
 The solution described here should only be used as a workaround until official support arrives.
 It has been tested on a Macbook Pro with M1 Processor.
 
-Docker, and native installation is supported. In both cases an Anaconda environment is created, and as many dependencies from Pip as possible are installed based on the `pyproject.toml` of a specific Rasa Version, e.g. [3.0.4](https://github.com/RasaHQ/rasa/blob/3.0.4/pyproject.toml).
+Docker, and native installation is supported. In both cases an Anaconda environment is created, and as many dependencies from Pip as possible are installed based on the `pyproject.toml` of a specific Rasa Version, e.g. [3.0.5](https://github.com/RasaHQ/rasa/blob/3.0.5/pyproject.toml).
 The remaining packages for which no `arm64`/`aarch64` wheels are available on PyPI are fetched from Anaconda channels (`conda-forge`, `noarch`, and `apple`).
 
 At the time of writing, the only dependency that could neither be satisfied from Pip nor Anaconda is `tensorflow-text`.
@@ -25,7 +25,7 @@ Follow the installation steps on the linked Github page.
 Store the Rasa version of your choice in an environment variable.
 
 ```bash
-export RASA_VERSION=3.0.4
+export RASA_VERSION=3.0.5
 ```
 
 Create a conda environment with the Rasa dependencies based on the specific env file
@@ -53,7 +53,7 @@ Verify that its working by executing `rasa init`.
 Store the Rasa version of your choice in an environment variable.
 
 ```bash
-export RASA_VERSION=3.0.4
+export RASA_VERSION=3.0.5
 ```
 
 Run the build script.
