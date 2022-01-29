@@ -22,7 +22,7 @@ Choose a version and platform combination and then proceed to one of the next ch
 You need to have the arm64 (Apple Silicon) version of [Miniforge](https://github.com/conda-forge/miniforge) installed.
 Follow the installation steps on the linked Github page.
 
-Store the Rasa version of your choice in an environment variable.
+Choose one of the [available Rasa versions](/output/native), and store it in an environment variable:
 
 ```bash
 export RASA_VERSION=3.0.5
@@ -50,7 +50,7 @@ Verify that its working by executing `rasa init`.
 
 ## Docker
 
-Store the Rasa version of your choice in an environment variable.
+Choose one of the [available Rasa versions](/output/docker), and store it in an environment variable:
 
 ```bash
 export RASA_VERSION=3.0.5
