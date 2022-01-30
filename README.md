@@ -62,11 +62,8 @@ Run the build script.
 ./scripts/build-docker.sh
 ```
 
-Now you can use two containers:
+Now you can start a Rasa container like so:
 
 ```bash
-# conda flavor (~3gb, conda package manager available)
-docker run -it rasa-aarch64:conda-${RASA_VERSION}
-# or ubuntu (1.5gb, only pip available)
 docker run -it rasa-aarch64:${RASA_VERSION}
 ```

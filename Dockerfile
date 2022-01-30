@@ -45,6 +45,9 @@ RUN conda-pack --ignore-missing-files --name rasa -o /tmp/env.tar \
 
 FROM ubuntu:20.04 as runner
 
+# Create rasa user and group
+RUN useradd -rm -d /app -s /sbin/nologin -g root -u 1001 rasa && groupadd -g 1001 rasa
+
 COPY --from=builder /opt/venv /opt/venv
 COPY --from=builder /usr/lib/aarch64-linux-gnu/libgomp.so.1 /usr/lib/aarch64-linux-gnu/libgomp.so.1
 
@@ -52,5 +55,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 ENV LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1
 
 WORKDIR /app
+
+USER 1001
 
 ENTRYPOINT ["/bin/bash"]
