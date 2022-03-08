@@ -1,61 +1,100 @@
+# global variables
+ARG RASA_VERSION
+ARG USER="nonroot"
+ARG HOME="/nonroot"
+ARG UID=1000
+ARG GID=1000
+ARG CONDA_ENV_NAME="rasa"
+ARG CONDA_ENV="$HOME/.conda/envs/$CONDA_ENV_NAME"
+ARG PYTHON_VERSION="3.8"
+
 FROM condaforge/miniforge3:latest as conda
-
-ARG RASA_VERSION="3.0.5"
-
-RUN apt update && apt install curl build-essential -y
 
 # install bazel to build dm-tree
 # from https://github.com/KumaTea/tensorflow-aarch64/blob/docker/docker/py38/Dockerfile
-RUN set -ex \
+RUN apt-get update \
+    && apt-get install build-essential -y \
     && cd /tmp \
     && wget https://github.com/bazelbuild/bazel/releases/download/3.7.2/bazel-3.7.2-linux-arm64 \
     && chmod +x /tmp/bazel-3.7.2-linux-arm64 \
     && mv /tmp/bazel-3.7.2-linux-arm64 /usr/bin/bazel \
     && bazel version
 
-WORKDIR /app
+# use global variables
+ARG USER
+ARG HOME
+ARG UID
+ARG GID
+ARG RASA_VERSION
+ARG CONDA_ENV_NAME
+ARG CONDA_ENV
 
-COPY ./output/docker/rasa_${RASA_VERSION}_env.yml ./env.yml
+# create nonroot user with home directory ad /nonroot
+RUN groupadd \
+    --gid $GID \
+    $USER \
+    && useradd \
+    --uid $UID \
+    --gid $GID \
+    --create-home \
+    --home $HOME \
+    $USER \
+    && chown -R $USER $HOME
+
+WORKDIR $HOME
+
+ARG ENV_FILE="env-$RASA_VERSION.yml"
+COPY ./dependency-converter ./dependency-converter
+RUN pip install ./dependency-converter \
+    && python -m rasa_dc \
+    --platform docker \
+    --rasa_version $RASA_VERSION \
+    -d "." \
+    -f $ENV_FILE 
+
+USER $USER
 
 # Create the virtual environment according to the env.yml file
-# and install Rasa without its dependencies
-RUN conda env create --file=./env.yml --name=rasa \
-    && /opt/conda/envs/rasa/bin/pip install --no-deps rasa==${RASA_VERSION}
+RUN conda env create \
+    --file=$ENV_FILE \
+    --name=$CONDA_ENV_NAME
 
-# https://pythonspeed.com/articles/activate-conda-dockerfile/
-# SHELL ["conda", "run", "-n", "rasa", "/bin/bash", "-c"]
-
-RUN conda init && \
-    echo "conda activate rasa" >> ~/.bashrc
-
+ENV PATH="$CONDA_ENV/bin:$PATH"
 ENV LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1
 
-ENTRYPOINT ["/bin/bash"]
-
-FROM conda as builder
-
-RUN conda install conda-pack
-
-# Use conda-pack to create a standalone env:
-RUN conda-pack --ignore-missing-files --name rasa -o /tmp/env.tar \
-    && mkdir /opt/venv \
-    && tar xf /tmp/env.tar -C /opt/venv \
-    && rm /tmp/env.tar \
-    && /opt/venv/bin/conda-unpack
+# install Rasa without dependencies
+RUN pip install --no-deps rasa==${RASA_VERSION}
 
 FROM ubuntu:20.04 as runner
 
-# Create rasa user and group
-RUN useradd -rm -d /app -s /sbin/nologin -g root -u 1001 rasa && groupadd -g 1001 rasa
+# use global variables
+ARG USER
+ARG HOME
+ARG UID
+ARG GID
+ARG CONDA_ENV
+ARG RASA_VERSION
 
-COPY --from=builder /opt/venv /opt/venv
-COPY --from=builder /usr/lib/aarch64-linux-gnu/libgomp.so.1 /usr/lib/aarch64-linux-gnu/libgomp.so.1
+# create nonroot user with home directory ad /nonroot
+RUN groupadd \
+    --gid $GID \
+    $USER \
+    && useradd \
+    --uid $UID \
+    --gid $GID \
+    --create-home \
+    --home $HOME \
+    $USER \
+    && chown -R $USER $HOME
 
-ENV PATH="/opt/venv/bin:$PATH"
+COPY --from=conda $CONDA_ENV $CONDA_ENV
+COPY --from=conda /usr/lib/aarch64-linux-gnu/libgomp.so.1 /usr/lib/aarch64-linux-gnu/libgomp.so.1
+
+ENV PATH="$CONDA_ENV/bin:$PATH"
 ENV LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1
 
-WORKDIR /app
+WORKDIR $HOME
 
-USER 1001
+USER $USER
 
 ENTRYPOINT ["/bin/bash"]

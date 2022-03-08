@@ -1,6 +1,8 @@
-from ras.ras import convert
 import argparse
-from ras import __version__
+from pathlib import Path
+
+from rasa_dc import __version__
+from rasa_dc.rasa_dc import convert
 
 
 def main():
@@ -24,12 +26,20 @@ def main():
         help="Target Platform. Allowed values are 'docker' (default), or 'native'. ",
     )
     parser.add_argument(
-        "-o",
-        "--output",
-        default="./rasa-conda-env.yml",
-        metavar="YAML",
+        "-d",
+        "--out_dir",
+        default="./output",
+        metavar="dir path",
+        type=Path,
+        help="directory to place generated output files",
+    )
+    parser.add_argument(
+        "-f",
+        "--out_file",
+        # default="./rasa-conda-env.yml",
+        metavar="out_file.yml",
         type=str,
-        help="environment.yaml output file.",
+        help="name of generated conda environment file",
     )
     parser.add_argument(
         "--dev",
@@ -47,7 +57,14 @@ def main():
     )
     args = parser.parse_args()
 
-    convert(args.rasa_version, args.platform, include_dev=args.dev, extras=args.extras)
+    convert(
+        rasa_version=args.rasa_version,
+        platform=args.platform,
+        out_dir=args.out_dir,
+        out_file=args.out_file,
+        include_dev=args.dev,
+        extras=args.extras,
+    )
 
 
 if __name__ == "__main__":

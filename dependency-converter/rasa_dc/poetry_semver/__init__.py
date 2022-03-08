@@ -1,6 +1,6 @@
 import re
 
-from .empty_constraint import EmptyConstraint
+# from .empty_constraint import EmptyConstraint
 from .patterns import BASIC_CONSTRAINT
 from .patterns import CARET_CONSTRAINT
 from .patterns import TILDE_CONSTRAINT
@@ -12,7 +12,7 @@ from .version_range import VersionRange
 from .version_union import VersionUnion
 
 
-__version__ = "0.1.0"
+# __version__ = "0.1.0"
 
 
 def parse_constraint(constraints):  # type: (str) -> VersionConstraint

@@ -1,69 +1,58 @@
 # Rasa on Macs with Apple Silicon (Native / Docker)
 
-As of January 2022, Rasa is not officially supported on Macs with ARM-based Apple Silicon processors.
+As of March 2022, Rasa is not officially supported on Macs with ARM-based Apple Silicon processors.
 The solution described here should only be used as a workaround until official support arrives.
 It has been tested on a Macbook Pro with M1 Processor.
 
-Docker, and native installation is supported. In both cases an Anaconda environment is created, and as many dependencies from Pip as possible are installed based on the `pyproject.toml` of a specific Rasa Version, e.g. [3.0.5](https://github.com/RasaHQ/rasa/blob/3.0.5/pyproject.toml).
-The remaining packages for which no `arm64`/`aarch64` wheels are available on PyPI are fetched from Anaconda channels (`conda-forge`, `noarch`, and `apple`).
+Docker, and native installation is supported. In both cases an Anaconda environment is created in which as many dependencies as possible are installed via `pip` based on the `pyproject.toml` of a specific Rasa release.
+The remaining packages for which no `arm64`/`aarch64` wheels are available on PyPI are fetched from Anaconda channels (`conda-forge`, `noarch`, and `apple`) or from Github repositories that offer precompiled wheels.
 
 At the time of writing, the only dependency that could neither be satisfied from Pip nor Anaconda is `tensorflow-text`.
-Therefore, projects that rely on Rasa features utilizing tensorflow-text will not work.
+Therefore, projects that rely on Rasa features utilizing this package will not work.
 
-## First steps
+## Getting Started
 
-Clone this repo, then have a look inside the `output` directory.
-The version numbers of the yaml files found inside `native`, and `docker` subdirectories
-tell you which Rasa version you can currently install natively, or via Docker.
-Choose a version and platform combination and then proceed to one of the next chapters.
+### Docker
 
-## Native Installation
-
-You need to have the arm64 (Apple Silicon) version of [Miniforge](https://github.com/conda-forge/miniforge) installed.
-Follow the installation steps on the linked Github page.
-
-Choose one of the [available Rasa versions](/output/native), and store it in an environment variable:
+The easiest way to get started is by using the [Docker image](https://hub.docker.com/r/khalosa/rasa-aarch64).
 
 ```bash
-export RASA_VERSION=3.0.5
+docker run -it --rm khalosa/rasa-aarch64:latest
 ```
-
-Create a conda environment with the Rasa dependencies based on the specific env file
-
-```bash
-conda env create --name rasa-${RASA_VERSION} --file=output/native/rasa_${RASA_VERSION}_env.yml
-```
-
-Activate it
-
-```bash
-conda activate rasa-${RASA_VERSION}
-```
-
-Finally, install Rasa without its dependencies (we already installed them).
-
-```bash
-pip install --no-deps rasa==${RASA_VERSION}
-```
-
-Verify that its working by executing `rasa init`.
-
-## Docker
 
 Choose one of the [available Rasa versions](/output/docker), and store it in an environment variable:
 
-```bash
-export RASA_VERSION=3.0.5
-```
-
-Run the build script.
+Alternatively, if you want to build the image yourself:
 
 ```bash
 ./scripts/build-docker.sh
 ```
 
-Now you can start a Rasa container like so:
+### Native Installation
+
+If you want to run Rasa natively on your Mac with GPU-support, you need to have these tools installed:
+
+- [Miniforge](https://github.com/conda-forge/miniforge), arm64 (Apple Silicon) version
+- Python 3
 
 ```bash
-docker run -it rasa-aarch64:${RASA_VERSION}
+# set rasa version
+export RASA_VERSION="3.0.8"
+
+# use the small library in this repo to create a conda env file
+python -m rasa_dc --platform native --rasa_version $RASA_VERSION
+
+# create a new conda environment from the generated file
+conda env create --name rasa-${RASA_VERSION} --file=output/rasa_${RASA_VERSION}_native_env.yml
+
+# finally install Rasa without dependencies into the newly created conda environment
+$HOME/miniforge3/envs/rasa-$RASA_VERSION/bin/pip install --no-deps rasa==$RASA_VERSION
 ```
+
+Now you should be able to activate the created environment:
+
+```bash
+conda activate rasa-${RASA_VERSION}
+```
+
+Verify that its working by executing `rasa init`.

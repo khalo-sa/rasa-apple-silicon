@@ -1,77 +1,80 @@
-from pathlib import Path
 import urllib.request
 from datetime import datetime
+from pathlib import Path
 from typing import Iterable, Mapping, Optional, TextIO, Tuple  # noqa
 
-import semver
 import toml
 
-from ras import __version__
-import ras.poetry_semver as poetry_semver
+import rasa_dc.poetry_semver as poetry_semver
+from rasa_dc import __version__
 
 
 def get_hardcoded(platform: str, rasa_version: str) -> dict:
-    if semver.compare(rasa_version, "3.0.3") in [0, 1] or semver.compare(
-        rasa_version, "3.0.5"
-    ) in [0, -1]:
-        if platform == "docker":
-            hardcoded = {
-                "conda": {
-                    "python": "==3.8.12",
-                    "h5py": "==3.1.0",
-                    "numpy": "==1.19.5",
-                    "scikit-learn": "==0.24.2",
-                    "uvloop": "==0.14",
-                    "ruamel.yaml": ">=0.16.5,<0.17.0",
-                    "dask": "==2021.11.2",
-                    "aiohttp": ">=3.6,<3.7.4",
-                },
-                "pip": {
-                    # "/wheels/tensorflow_addons-0.14.0.dev0-cp38-cp38-linux_aarch64.whl": None,  # noqa
-                    # "/wheels/tensorflow-2.6.0-cp38-cp38-linux_aarch64.whl": None,
-                    "https://github.com/KumaTea/tensorflow-aarch64/releases/download/v2.6/tensorflow-2.6.0-cp38-cp38-linux_aarch64.whl": None,  # noqa
-                    "https://github.com/Qengineering/TensorFlow-Addons-Raspberry-Pi_64-bit/raw/main/tensorflow_addons-0.14.0.dev0-cp38-cp38-linux_aarch64.whl": None,  # noqa
-                    # https://forum.rasa.com/t/problem-with-websockets/49570/14?u
-                    "sanic": "==21.6.0",
-                    "Sanic-Cors": "==1.0.0",
-                    "sanic-routing": "==0.7.0",
-                },
-                "uncomment": ["tensorflow", "tensorflow-text", "tensorflow-addons"],
-                "channels": ["conda-forge", "noarch"],
-                "name": "rasa" + "".join([c for c in rasa_version if c.isdigit()]),
-            }
-        else:
-            hardcoded = {
-                "conda": {
-                    "python": "==3.8.12",
-                    "numpy": "==1.19.5",
-                    "scikit-learn": "==0.24.2",
-                    "dask": "==2021.11.2",
-                    "tensorflow-deps": "==2.6.0",
-                    "scipy": ">=1.4.1,<2.0.0",
-                    "aiohttp": ">=3.6,<3.7.4",
-                    "psycopg2": ">=2.8.2,<2.10.0",
-                    "uvloop": "==0.16.0",
-                    "matplotlib": ">=3.1,<3.4",
-                    "regex": ">=2020.6,<2021.9",
-                },
-                "pip": {
-                    "tensorflow-macos": "==2.6.0",
-                    "tensorflow-metal": None,
-                    "tfa-nightly": None,
-                },
-                "uncomment": [
-                    "tensorflow",
-                    "tensorflow-text",
-                    "tensorflow-addons",
-                    "psycopg2-binary",
-                ],
-                "channels": ["conda-forge", "apple"],
-                "name": "rasa" + "".join([c for c in rasa_version if c.isdigit()]),
-            }
+    # print(semver.compare(rasa_version, "3.0.3"))
+    # print(semver.compare(rasa_version, "3.0.5"))
 
+    # if (
+    #     semver.compare(rasa_version, "3.0.3") == -1
+    #     or semver.compare(rasa_version, "3.0.5") == 1
+    # ):
+    #     raise ValueError(f"Version {rasa_version} not supported yet")
+
+    if platform == "docker":
+        hardcoded = {
+            "conda": {
+                "python": "==3.8.12",
+                "h5py": "==3.1.0",
+                "numpy": "==1.19.5",
+                "scikit-learn": "==0.24.2",
+                "uvloop": "==0.14",
+                "ruamel.yaml": ">=0.16.5,<0.17.0",
+                "dask": "==2021.11.2",
+                "aiohttp": ">=3.6,<3.7.4",
+            },
+            "pip": {
+                # "/wheels/tensorflow_addons-0.14.0.dev0-cp38-cp38-linux_aarch64.whl": None,  # noqa
+                # "/wheels/tensorflow-2.6.0-cp38-cp38-linux_aarch64.whl": None,
+                "https://github.com/KumaTea/tensorflow-aarch64/releases/download/v2.6/tensorflow-2.6.0-cp38-cp38-linux_aarch64.whl": None,  # noqa
+                # "https://github.com/KumaTea/tensorflow-aarch64/releases/download/v2.7/tensorflow-2.7.0-cp38-cp38-linux_aarch64.whl": None,  # noqa
+                "https://github.com/Qengineering/TensorFlow-Addons-Raspberry-Pi_64-bit/raw/main/tensorflow_addons-0.14.0.dev0-cp38-cp38-linux_aarch64.whl": None,  # noqa
+                # https://forum.rasa.com/t/problem-with-websockets/49570/14?u
+                "sanic": "==21.6.0",
+                "Sanic-Cors": "==1.0.0",
+                "sanic-routing": "==0.7.0",
+            },
+            "uncomment": ["tensorflow", "tensorflow-text", "tensorflow-addons"],
+            "channels": ["conda-forge", "noarch"],
+            "name": "rasa" + "".join([c for c in rasa_version if c.isdigit()]),
+        }
     else:
-        raise ValueError(f"Version {rasa_version} not supported yet")
+        hardcoded = {
+            "conda": {
+                "python": "==3.8.12",
+                "numpy": "==1.19.5",
+                "scikit-learn": "==0.24.2",
+                "dask": "==2021.11.2",
+                "tensorflow-deps": "==2.6.0",
+                "scipy": ">=1.4.1,<2.0.0",
+                "aiohttp": ">=3.6,<3.7.4",
+                "psycopg2": ">=2.8.2,<2.10.0",
+                "uvloop": "==0.16.0",
+                "matplotlib": ">=3.1,<3.4",
+                "regex": ">=2020.6,<2021.9",
+            },
+            "pip": {
+                "tensorflow-macos": "==2.6.0",
+                "tensorflow-metal": None,
+                "tfa-nightly": None,
+            },
+            "uncomment": [
+                "tensorflow",
+                "tensorflow-text",
+                "tensorflow-addons",
+                "psycopg2-binary",
+            ],
+            "channels": ["conda-forge", "apple"],
+            "name": "rasa" + "".join([c for c in rasa_version if c.isdigit()]),
+        }
 
     return hardcoded
 
@@ -80,6 +83,8 @@ def convert(
     rasa_version: str = "3.0.5",
     platform: str = "docker",
     include_dev: bool = False,
+    out_dir: Path = Path("./output"),
+    out_file: str = None,
     extras: Optional[Iterable[str]] = None,
 ) -> str:
     """Convert a pyproject.toml file to a conda environment YAML
@@ -104,9 +109,9 @@ def convert(
     """
 
     yaml_obj_stub = get_hardcoded(platform, rasa_version)
-
-    PYPROJECT_TOML = Path(f"./output/rasa_{rasa_version}_pyproject.toml")
-    CONDA_ENV = Path(f"./output/{platform}/rasa_{rasa_version}_env.yml")
+    out_file = out_file if out_file else f"rasa_{rasa_version}_{platform}_env.yml"
+    PYPROJECT_TOML = Path(f"{out_dir}/rasa_{rasa_version}_pyproject.toml")
+    CONDA_ENV = Path(f"{out_dir}/{out_file}")
 
     with urllib.request.urlopen(
         f"https://github.com/RasaHQ/rasa/raw/{rasa_version}/pyproject.toml"
@@ -135,7 +140,6 @@ def convert(
 
     yaml_obj = create_yaml_obj(yaml_obj_stub, poetry_dependencies)
     yaml_str = to_yaml_string(yaml_obj)
-
     with open(CONDA_ENV, "w") as f:
         f.write(yaml_str)
 

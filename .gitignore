@@ -1,10 +1,13 @@
-wheels
 .DS_Store
 .venv
 .ipynb_checkpoints
 .vscode
 *.ipynb
 __pycache__
-tmp
-output/*.toml
+output
 *.pyc
+wheels
+tmp
+*.egg
+*.egg-info
+test
