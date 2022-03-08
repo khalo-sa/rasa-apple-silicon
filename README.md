@@ -35,6 +35,8 @@ If you want to run Rasa natively on your Mac with GPU-support, you need to have 
 - [Miniforge](https://github.com/conda-forge/miniforge), arm64 (Apple Silicon) version
 - Python 3
 
+Now run this snippet:
+
 ```bash
 # set rasa version
 export RASA_VERSION="3.0.8"
