@@ -107,6 +107,8 @@ def convert(
     The contents of an environment.yaml file as a string.
 
     """
+    
+    out_dir.mkdir(exist_ok=True)
 
     yaml_obj_stub = get_hardcoded(platform, rasa_version)
     out_file = out_file if out_file else f"rasa_{rasa_version}_{platform}_env.yml"

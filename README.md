@@ -33,7 +33,7 @@ Alternatively, if you want to build the image yourself:
 If you want to run Rasa natively on your Mac with GPU-support, you need to have these tools installed:
 
 - [Miniforge](https://github.com/conda-forge/miniforge), arm64 (Apple Silicon) version
-- Python 3
+- Python 3 (`pip`, and `python` commands must point to a Python3 installation)
 
 Now run this snippet:
 
@@ -41,7 +41,10 @@ Now run this snippet:
 # set rasa version
 export RASA_VERSION="3.0.8"
 
-# use the small library in this repo to create a conda env file
+# install the small library in this repo
+pip install -e ./dependency-converter
+
+# use it to create a conda env file
 python -m rasa_dc --platform native --rasa_version $RASA_VERSION
 
 # create a new conda environment from the generated file
