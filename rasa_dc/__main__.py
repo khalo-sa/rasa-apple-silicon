@@ -47,6 +47,11 @@ def main():
         help="include dev dependencies",
     )
     parser.add_argument(
+        "--only_conda",
+        action="store_true",
+        help="convert all pip deps to conda deps ignoring hardcoded rules",
+    )
+    parser.add_argument(
         "--extras",
         "-E",
         action="append",
@@ -60,6 +65,7 @@ def main():
     convert(
         rasa_version=args.rasa_version,
         platform=args.platform,
+        only_conda=args.only_conda,
         out_dir=args.out_dir,
         out_file=args.out_file,
         include_dev=args.dev,

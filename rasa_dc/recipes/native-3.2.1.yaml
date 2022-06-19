@@ -1,0 +1,45 @@
+add:
+  psycopg2:
+    source: conda
+    version: ">=2.8.2,<2.10.0"
+    desc: replacement for psycopg2-binary
+  uvloop:
+    source: conda
+    version: "==0.16"
+  tensorflow-deps:
+    source: conda
+    version: 2.7.0
+    desc: replacement for tensorflow
+  tensorflow-macos:
+    source: pip
+    version: 2.7.0
+    desc: replacement for tensorflow
+  # tensorflow-metal:
+  #   source: pip
+  #   desc: replacement for tensorflow
+modify:
+  python:
+    source: conda
+    version: "==3.8.13"
+  numpy:
+    source: conda
+  scikit-learn:
+    source: conda
+  dask:
+    source: conda
+  ruamel.yaml:
+    source: conda
+  aiohttp:
+    source: conda
+    desc: original version string not convertable
+    version: ">=3.6,<3.7.4"
+  tensorflow-addons:
+    source: pip
+    version: "==0.17.1"
+remove:
+  - tensorflow-text # not available
+  - tensorflow
+  - psycopg2-binary
+channels:
+  - conda-forge
+  - apple

@@ -10,15 +10,8 @@ ARG PYTHON_VERSION="3.8"
 
 FROM condaforge/miniforge3:latest as conda
 
-# install bazel to build dm-tree
-# from https://github.com/KumaTea/tensorflow-aarch64/blob/docker/docker/py38/Dockerfile
 RUN apt-get update \
-    && apt-get install build-essential -y \
-    && cd /tmp \
-    && wget https://github.com/bazelbuild/bazel/releases/download/3.7.2/bazel-3.7.2-linux-arm64 \
-    && chmod +x /tmp/bazel-3.7.2-linux-arm64 \
-    && mv /tmp/bazel-3.7.2-linux-arm64 /usr/bin/bazel \
-    && bazel version
+    && apt-get install build-essential -y
 
 # use global variables
 ARG USER
@@ -43,18 +36,20 @@ RUN groupadd \
 
 WORKDIR $HOME
 
-ARG ENV_FILE="env-$RASA_VERSION.yml"
-COPY ./dependency-converter ./dependency-converter
-RUN pip install ./dependency-converter \
-    && python -m rasa_dc \
+ARG ENV_FILE="env-$RASA_VERSION.yaml"
+COPY ./requirements.txt ./
+RUN pip install -r requirements.txt
+COPY ./rasa_dc ./rasa_dc
+RUN python -m rasa_dc \
     --platform docker \
     --rasa_version $RASA_VERSION \
     -d "." \
-    -f $ENV_FILE 
+    -f $ENV_FILE
 
 USER $USER
 
 # Create the virtual environment according to the env.yml file
+COPY ./tensorflow-addons-aarch64/whl ./tfa-whl
 RUN conda env create \
     --file=$ENV_FILE \
     --name=$CONDA_ENV_NAME

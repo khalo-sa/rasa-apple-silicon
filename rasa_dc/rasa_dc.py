@@ -1,88 +1,40 @@
 import urllib.request
 from datetime import datetime
 from pathlib import Path
-from typing import Iterable, Mapping, Optional, TextIO, Tuple  # noqa
+from typing import Iterable, Mapping, Optional, Tuple, List  # noqa
 
 import toml
+import yaml
 
 import rasa_dc.poetry_semver as poetry_semver
 from rasa_dc import __version__
 
 
-def get_hardcoded(platform: str, rasa_version: str) -> dict:
-    # print(semver.compare(rasa_version, "3.0.3"))
-    # print(semver.compare(rasa_version, "3.0.5"))
+def load_version_file(platform: str, rasa_version: str) -> dict:
+    version_dir = Path(__file__).parent.resolve() / "recipes"
+    version_file = version_dir / f"{platform}-{rasa_version}.yaml"
+    if not version_file.exists():
+        print(
+            f"Rasa version {rasa_version} not supported for this platform, available recipes:"
+        )
+        for file in version_dir.glob(f"{platform}-*.yaml"):
+            print(f"- {file.stem}")
+        exit(-1)
 
-    # if (
-    #     semver.compare(rasa_version, "3.0.3") == -1
-    #     or semver.compare(rasa_version, "3.0.5") == 1
-    # ):
-    #     raise ValueError(f"Version {rasa_version} not supported yet")
+    with open(version_file) as f:
+        env_stub = yaml.load(f, Loader=yaml.FullLoader)
 
-    if platform == "docker":
-        hardcoded = {
-            "conda": {
-                "python": "==3.8.12",
-                "h5py": "==3.1.0",
-                "numpy": "==1.19.5",
-                "scikit-learn": "==0.24.2",
-                "uvloop": "==0.14",
-                "ruamel.yaml": ">=0.16.5,<0.17.0",
-                "dask": "==2021.11.2",
-                "aiohttp": ">=3.6,<3.7.4",
-            },
-            "pip": {
-                # "/wheels/tensorflow_addons-0.14.0.dev0-cp38-cp38-linux_aarch64.whl": None,  # noqa
-                # "/wheels/tensorflow-2.6.0-cp38-cp38-linux_aarch64.whl": None,
-                "https://github.com/KumaTea/tensorflow-aarch64/releases/download/v2.6/tensorflow-2.6.0-cp38-cp38-linux_aarch64.whl": None,  # noqa
-                # "https://github.com/KumaTea/tensorflow-aarch64/releases/download/v2.7/tensorflow-2.7.0-cp38-cp38-linux_aarch64.whl": None,  # noqa
-                "https://github.com/Qengineering/TensorFlow-Addons-Raspberry-Pi_64-bit/raw/main/tensorflow_addons-0.14.0.dev0-cp38-cp38-linux_aarch64.whl": None,  # noqa
-                # https://forum.rasa.com/t/problem-with-websockets/49570/14?u
-                "sanic": "==21.6.0",
-                "Sanic-Cors": "==1.0.0",
-                "sanic-routing": "==0.7.0",
-            },
-            "uncomment": ["tensorflow", "tensorflow-text", "tensorflow-addons"],
-            "channels": ["conda-forge", "noarch"],
-            "name": "rasa" + "".join([c for c in rasa_version if c.isdigit()]),
-        }
-    else:
-        hardcoded = {
-            "conda": {
-                "python": "==3.8.12",
-                "numpy": "==1.19.5",
-                "scikit-learn": "==0.24.2",
-                "dask": "==2021.11.2",
-                "tensorflow-deps": "==2.6.0",
-                "scipy": ">=1.4.1,<2.0.0",
-                "aiohttp": ">=3.6,<3.7.4",
-                "psycopg2": ">=2.8.2,<2.10.0",
-                "uvloop": "==0.16.0",
-                "matplotlib": ">=3.1,<3.4",
-                "regex": ">=2020.6,<2021.9",
-            },
-            "pip": {
-                "tensorflow-macos": "==2.6.0",
-                "tensorflow-metal": None,
-                "tfa-nightly": None,
-            },
-            "uncomment": [
-                "tensorflow",
-                "tensorflow-text",
-                "tensorflow-addons",
-                "psycopg2-binary",
-            ],
-            "channels": ["conda-forge", "apple"],
-            "name": "rasa" + "".join([c for c in rasa_version if c.isdigit()]),
-        }
+    env_stub["name"] = "rasa" + "".join([c for c in rasa_version if c.isdigit()])
+    env_stub["conda"], env_stub["pip"] = {}, {}
 
-    return hardcoded
+    return env_stub
 
 
 def convert(
     rasa_version: str = "3.0.5",
     platform: str = "docker",
     include_dev: bool = False,
+    only_conda: bool = False,
     out_dir: Path = Path("./output"),
     out_file: str = None,
     extras: Optional[Iterable[str]] = None,
@@ -107,11 +59,16 @@ def convert(
     The contents of an environment.yaml file as a string.
 
     """
-    
+
     out_dir.mkdir(exist_ok=True)
 
-    yaml_obj_stub = get_hardcoded(platform, rasa_version)
-    out_file = out_file if out_file else f"rasa_{rasa_version}_{platform}_env.yml"
+    env_stub = load_version_file(platform, rasa_version)
+    only_conda_suffix = "_only_conda" if only_conda else ""
+    out_file = (
+        out_file
+        if out_file
+        else f"rasa_{rasa_version}_{platform}{only_conda_suffix}_env.yml"
+    )
     PYPROJECT_TOML = Path(f"{out_dir}/rasa_{rasa_version}_pyproject.toml")
     CONDA_ENV = Path(f"{out_dir}/{out_file}")
 
@@ -140,10 +97,11 @@ def convert(
             if isinstance(dep, dict):
                 dep["optional"] = False
 
-    yaml_obj = create_yaml_obj(yaml_obj_stub, poetry_dependencies)
-    yaml_str = to_yaml_string(yaml_obj)
+    env_obj = create_env_obj(env_stub, poetry_dependencies, only_conda)
+    yaml_str = to_yaml_string(env_obj)
     with open(CONDA_ENV, "w") as f:
         f.write(yaml_str)
+    print(f"Created env file: {CONDA_ENV}")
 
 
 def convert_version(name: str, spec_str: str) -> str:
@@ -171,15 +129,17 @@ def convert_version(name: str, spec_str: str) -> str:
         converted = str(spec)
     elif isinstance(spec, poetry_semver.VersionUnion):
         # raise ValueError("Complex version constraints are not supported at the moment.") # noqa
-        print("Complex version constraints are not supported at the moment.")
+        # print("Complex version constraints are not supported at the moment.")
         converted = " # " + str(spec)
     else:
         raise ValueError(f"dependency '{name}': unknown spec '{spec}' [{type(spec)}]")
     return converted
 
 
-def create_yaml_obj(
-    yaml_obj: dict, poetry_dependencies: Mapping
+def create_env_obj(
+    env_stub: dict,
+    poetry_dependencies: Mapping,
+    only_conda: bool = False,
 ) -> Tuple[Mapping, Mapping]:
     """Organize and apply conda constraints to dependencies
 
@@ -198,40 +158,78 @@ def create_yaml_obj(
     """
 
     # 2. Now do the conversion
-    resolved = {*yaml_obj["conda"].keys(), *yaml_obj["pip"].keys()}
+    # resolved = (
+    #     {*env_stub["conda"].keys(), *env_stub["pip"].keys()} if not only_conda else {}
+    # )
+
+    add, modify = (
+        env_stub.pop("add"),
+        env_stub.pop("modify"),
+    )
+
+    # add new deps
+    for name, dep_d in add.items():
+        git = dep_d.get("git")
+        if git:
+            env_stub["pip"][git] = None
+        else:
+            source = dep_d["source"]
+            version = dep_d.get("version")
+            version = convert_version(name, version) if version else ""
+            env_stub[source][name] = version
+
+    # add and optionally modify original deps
     for name, constraint in poetry_dependencies.items():
-        if name in resolved:
-            # dependency has been manually resolved
-            continue
-        elif isinstance(constraint, str):
-            yaml_obj["pip"][name] = convert_version(name, constraint)
+
+        if isinstance(constraint, str):
+            pip_version = constraint
         elif isinstance(constraint, dict):
             if constraint.get("optional", False):
                 continue
+
             if "git" in constraint:
                 git = constraint["git"]
                 tag = constraint["tag"]
-                yaml_obj["pip"][f"git+{git}@{tag}#egg={name}"] = None
-            elif "version" in constraint:
-                yaml_obj["pip"][name] = convert_version(name, constraint["version"])
-            else:
-                raise ValueError(
-                    f"This converter only supports normal dependencies and "
-                    f"git dependencies. No path, url, python restricted, "
-                    f"environment markers or multiple constraints. In your "
-                    f'case, check the "{name}" dependency. Sorry.'
-                )
+                name = f"git+{git}@{tag}#egg={name}"
+
+            if "version" in constraint:
+                pip_version = constraint["version"]
+
+            if "extras" in constraint:
+                name = f"{name}[{','.join(constraint['extras'])}]"
+
         else:
             raise ValueError(
                 f"This converter only supports normal dependencies and "
-                f"git dependencies. No multiple constraints. In your "
+                f"git dependencies. No path, url, python restricted, "
+                f"environment markers or multiple constraints. In your "
                 f'case, check the "{name}" dependency. Sorry.'
             )
 
-    return yaml_obj
+        name: str
+        pip_version: str
+        version: str = None
+        source: str = "pip"
+
+        if name in modify:
+            # dependency has been manually resolved
+            dep = modify[name]
+            source = dep["source"]
+            version = dep.get("version")
+
+        if not version:
+            version = convert_version(name, pip_version)
+
+        env_stub[source][name] = version
+
+    if only_conda:
+        env_stub["conda"].update(env_stub["pip"])
+        env_stub["pip"] = {}
+
+    return env_stub
 
 
-def to_yaml_string(yaml_object: dict) -> str:
+def to_yaml_string(env_object: dict) -> str:
     """Converts dependencies to a string in YAML format.
 
     Note that there is no third party library to manage the YAML format. This is
@@ -253,24 +251,24 @@ def to_yaml_string(yaml_object: dict) -> str:
     A string with an environment.yaml definition usable by conda.
 
     """
-    deps_str = []
-    for name, version in sorted(yaml_object["conda"].items()):
+    deps = []
+    for name, version in sorted(env_object["conda"].items()):
         version = version or ""
         line = f"  - {name}{version}"
-        line = f"# {line}" if name in yaml_object["uncomment"] else line
-        deps_str.append(line)
-    if yaml_object["pip"]:
-        deps_str.append("  - pip")
-        deps_str.append("  - pip:")
-    for name, version in sorted(yaml_object["pip"].items()):
+        line = f"# {line}" if name in env_object["remove"] else line
+        deps.append(line)
+    if env_object["pip"]:
+        deps.append("  - pip")
+        deps.append("  - pip:")
+    for name, version in sorted(env_object["pip"].items()):
         version = version or ""
         line = f"    - {name}{version}"
-        line = f"# {line}" if name in yaml_object["uncomment"] else line
-        deps_str.append(line)
-    deps_str = "\n".join(deps_str)
+        line = f"# {line}" if name in env_object["remove"] else line
+        deps.append(line)
+    deps_str = "\n".join(deps)
 
     channels_str = []
-    for channel in yaml_object["channels"]:
+    for channel in env_object["channels"]:
         line = f"  - {channel}"
         channels_str.append(line)
     channels_str = "\n".join(channels_str)
@@ -282,7 +280,7 @@ def to_yaml_string(yaml_object: dict) -> str:
 #       version = {__version__}
 #       date: {date_str}
 ###############################################################################
-name: {yaml_object["name"]}
+name: {env_object["name"]}
 channels:
 {channels_str}
 dependencies:

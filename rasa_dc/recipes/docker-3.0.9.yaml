@@ -1,0 +1,40 @@
+add:
+  dm-tree:
+    source: conda
+    version: "==0.1.7"
+  h5py:
+    source: conda
+    version: "==3.1.0"
+  scikit-learn:
+    source: conda
+    version: "==0.24.2"
+  uvloop:
+    source: conda
+    version: "==0.16"
+  tensorflow:
+    git: "https://github.com/KumaTea/tensorflow-aarch64/releases/download/v2.6/tensorflow-2.6.0-cp38-cp38-linux_aarch64.whl"
+  tensorflow-addons:
+    git: "https://github.com/Qengineering/TensorFlow-Addons-Raspberry-Pi_64-bit/raw/main/tensorflow_addons-0.14.0.dev0-cp38-cp38-linux_aarch64.whl"
+modify:
+  python:
+    source: conda
+    version: "==3.8.13"
+  numpy:
+    source: conda
+    version: "==1.19.5"
+  ruamel.yaml:
+    source: conda
+    version: ">=0.16.5,<0.17.0"
+  dask:
+    source: conda
+    version: "==2021.11.2"
+  aiohttp:
+    source: conda
+    version: ">=3.6,<3.7.4"
+remove:
+  - tensorflow
+  - tensorflow-text
+  - tensorflow-addons
+channels:
+  - conda-forge
+  - noarch
