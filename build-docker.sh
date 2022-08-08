@@ -2,11 +2,11 @@
 
 set -e
 
-RASA_VERSION=${RASA_VERSION:-3.2.1}
+RASA_VERSION=${RASA_VERSION:-3.2.5}
 
 docker build \
     --target conda \
-    -t "rasa-aarch64:conda-${RASA_VERSION}" \
+    -t "khalosa/rasa-aarch64:conda-${RASA_VERSION}" \
     --build-arg RASA_VERSION=${RASA_VERSION} \
     .
 
