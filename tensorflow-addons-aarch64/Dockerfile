@@ -12,7 +12,7 @@ RUN wget https://github.com/bazelbuild/bazel/releases/download/5.2.0/bazel-5.2.0
     && mv /tmp/bazel-5.2.0-linux-arm64 /usr/bin/bazel \
     && bazel version
 
-RUN git clone https://github.com/tensorflow/addons.git /tmp/addons
+RUN git clone --depth 1 --branch v0.17.1 https://github.com/tensorflow/addons.git /tmp/addons
 
 WORKDIR /tmp/addons
 

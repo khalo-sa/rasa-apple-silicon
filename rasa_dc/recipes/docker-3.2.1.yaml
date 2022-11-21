@@ -15,7 +15,7 @@ add:
     source: pip
     version: 2.7.3
   tensorflow-addons:
-    git: "/tmp/tfa-whl/tensorflow_addons-0.17.0.dev0-cp38-cp38-linux_aarch64.whl"
+    git: "/tmp/tfa-whl/tensorflow_addons-0.17.1-cp38-cp38-linux_aarch64.whl"
 modify:
   python:
     source: conda
