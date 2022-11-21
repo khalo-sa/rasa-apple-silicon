@@ -1,13 +1,14 @@
 import urllib.request
 from datetime import datetime
 from pathlib import Path
-from typing import Iterable, Mapping, Optional, Tuple, List  # noqa
+from typing import Iterable, List, Mapping, Optional, Tuple  # noqa
 
 import toml
 import yaml
 
 import rasa_dc.poetry_semver as poetry_semver
 from rasa_dc import __version__
+from rasa_dc.poetry_semver.version import Version
 
 
 def load_version_file(platform: str, rasa_version: str) -> dict:
@@ -34,6 +35,7 @@ def convert(
     rasa_version: str = "3.0.5",
     platform: str = "docker",
     include_dev: bool = False,
+    python_version: str = "3.8",
     only_conda: bool = False,
     out_dir: Path = Path("./output"),
     out_file: str = None,
@@ -97,7 +99,7 @@ def convert(
             if isinstance(dep, dict):
                 dep["optional"] = False
 
-    env_obj = create_env_obj(env_stub, poetry_dependencies, only_conda)
+    env_obj = create_env_obj(env_stub, poetry_dependencies, python_version, only_conda)
     yaml_str = to_yaml_string(env_obj)
     with open(CONDA_ENV, "w") as f:
         f.write(yaml_str)
@@ -139,6 +141,7 @@ def convert_version(name: str, spec_str: str) -> str:
 def create_env_obj(
     env_stub: dict,
     poetry_dependencies: Mapping,
+    python_version: str,
     only_conda: bool = False,
 ) -> Tuple[Mapping, Mapping]:
     """Organize and apply conda constraints to dependencies
@@ -179,12 +182,30 @@ def create_env_obj(
             env_stub[source][name] = version
 
     # add and optionally modify original deps
+    dependency_items = list()
     for name, constraint in poetry_dependencies.items():
+        if isinstance(constraint, list):
+            # e.g. numpy
+            for _constraint in constraint:
+                dependency_items.append((name, _constraint))
+        else:
+            dependency_items.append((name, constraint))
+
+    for name, constraint in dependency_items:
 
         if isinstance(constraint, str):
             pip_version = constraint
         elif isinstance(constraint, dict):
             if constraint.get("optional", False):
+                continue
+
+            if "python" in constraint:
+                spec = poetry_semver.parse_constraint(constraint["python"])
+                if not spec.allows(Version.parse(python_version)):
+                    continue
+
+            if "markers" in constraint:
+                print(f"skipped constraint with markers: {name}", constraint)
                 continue
 
             if "git" in constraint:

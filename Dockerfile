@@ -19,6 +19,7 @@ ARG VENV
 ARG UID
 ARG GID
 ARG RASA_VERSION
+ARG PYTHON_VERSION
 
 # create nonroot user with home directory ad /nonroot
 RUN groupadd \
@@ -40,6 +41,7 @@ RUN pip install -r requirements.txt
 COPY ./rasa_dc ./rasa_dc
 RUN python -m rasa_dc \
     --platform docker \
+    --python $PYTHON_VERSION \
     --rasa_version $RASA_VERSION \
     -d "." \
     -f $ENV_FILE
@@ -71,7 +73,7 @@ ARG UID
 ARG GID
 ARG RASA_VERSION
 
-# create nonroot user with home directory ad /nonroot
+# create nonroot user with home directory at /nonroot
 RUN groupadd \
     --gid $GID \
     $USER \
@@ -84,14 +86,15 @@ RUN groupadd \
     && chown -R $USER $HOME
 
 COPY --from=conda $VENV $VENV
-COPY --from=conda /usr/lib/aarch64-linux-gnu/libgomp.so.1 /usr/lib/aarch64-linux-gnu/libgomp.so.1
+COPY --from=conda /usr/lib/aarch64-linux-gnu/libgomp.so.1.0.0 /usr/lib/aarch64-linux-gnu/libgomp.so.1.0.0
 
+# fix for scikit learn
+ENV LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1.0.0
 # make conda env default python env
 ENV PATH="$VENV/bin:$PATH"
-ENV LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1
 
 WORKDIR $HOME
 
 USER $USER
 
-ENTRYPOINT ["/bin/bash"]
+ENTRYPOINT ["rasa"]

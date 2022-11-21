@@ -26,6 +26,12 @@ def main():
         help="Target Platform. Allowed values are 'docker' (default), or 'native'. ",
     )
     parser.add_argument(
+        "--python",
+        default="3.8",
+        type=str,
+        help="Target Python Version",
+    )
+    parser.add_argument(
         "-d",
         "--out_dir",
         default="./output",
@@ -65,6 +71,7 @@ def main():
     convert(
         rasa_version=args.rasa_version,
         platform=args.platform,
+        python_version=args.python,
         only_conda=args.only_conda,
         out_dir=args.out_dir,
         out_file=args.out_file,
