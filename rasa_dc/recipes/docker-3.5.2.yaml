@@ -1,0 +1,38 @@
+add:
+  # dm-tree:
+  #   source: conda
+  #   version: "==0.1.7"
+  # h5py:
+  #   source: conda
+  #   version: "==3.1.0"
+  # uvloop:
+  #   source: conda
+  #   version: "==0.16"
+  tensorflow-aarch64:
+    source: pip
+    version: 2.11.0
+  tensorflow-addons:
+    git: "/tmp/tfa-whl/tensorflow_addons-0.19.0-cp310-cp310-linux_aarch64.whl"
+modify:
+  python:
+    source: conda
+    version: "==3.10.10"
+  # numpy:
+  #   source: conda
+  # dask:
+  #   source: conda
+  # ruamel.yaml:
+  #   source: conda
+  # aiohttp:
+  #   source: conda
+  #   version: ">=3.6,<3.7.4"
+  # scikit-learn:
+  #   source: conda
+  #   version: "==1.1.3"
+remove:
+  - tensorflow
+  - tensorflow-text
+  - tensorflow-addons
+channels:
+  - conda-forge
+  - noarch

@@ -5,12 +5,20 @@ ARG HOME="/app"
 ARG VENV="/opt/venv"
 ARG UID=1001
 ARG GID=1001
-ARG PYTHON_VERSION="3.8"
+ARG PYTHON_VERSION="3.10"
 
-FROM condaforge/miniforge3:latest as conda
+FROM condaforge/mambaforge:latest as conda
 
 RUN apt-get update \
     && apt-get install build-essential -y
+
+# for confluent-kafka
+# https://github.com/confluentinc/confluent-kafka-python/issues/1326#issuecomment-1228852754
+RUN apt-get install -y --no-install-recommends gcc git libssl-dev g++ make && \
+    cd /tmp && git clone https://github.com/edenhill/librdkafka.git && \
+    cd librdkafka && git checkout tags/v1.9.0 && \
+    ./configure && make && make install && \
+    cd ../ && rm -rf librdkafka
 
 # use global variables
 ARG USER
@@ -56,7 +64,7 @@ RUN rm -rf /tmp/*
 
 # make conda env default python env
 ENV PATH="$VENV/bin:$PATH"
-ENV LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1
+# ENV LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1
 
 # install Rasa without dependencies
 RUN pip install --no-deps rasa==${RASA_VERSION}
@@ -86,10 +94,10 @@ RUN groupadd \
     && chown -R $USER $HOME
 
 COPY --from=conda $VENV $VENV
-COPY --from=conda /usr/lib/aarch64-linux-gnu/libgomp.so.1.0.0 /usr/lib/aarch64-linux-gnu/libgomp.so.1.0.0
+# COPY --from=conda /usr/lib/aarch64-linux-gnu/libgomp.so.1.0.0 /usr/lib/aarch64-linux-gnu/libgomp.so.1.0.0
 
 # fix for scikit learn
-ENV LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1.0.0
+# ENV LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1.0.0
 # make conda env default python env
 ENV PATH="$VENV/bin:$PATH"
 
