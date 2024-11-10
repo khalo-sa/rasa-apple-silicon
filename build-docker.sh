@@ -2,7 +2,8 @@
 
 set -e
 
-RASA_VERSION=${RASA_VERSION:-3.2.5}
+export BUILDKIT_PROGRESS=plain
+RASA_VERSION=${RASA_VERSION:-3.6.12}
 
 docker build \
     --target conda \

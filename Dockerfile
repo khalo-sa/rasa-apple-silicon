@@ -64,7 +64,7 @@ RUN rm -rf /tmp/*
 
 # make conda env default python env
 ENV PATH="$VENV/bin:$PATH"
-# ENV LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1
+ENV LD_PRELOAD=/opt/venv/lib/python3.10/site-packages/scikit_learn.libs/libgomp-d22c30c5.so.1.0.0
 
 # install Rasa without dependencies
 RUN pip install --no-deps rasa==${RASA_VERSION}
@@ -94,10 +94,9 @@ RUN groupadd \
     && chown -R $USER $HOME
 
 COPY --from=conda $VENV $VENV
-# COPY --from=conda /usr/lib/aarch64-linux-gnu/libgomp.so.1.0.0 /usr/lib/aarch64-linux-gnu/libgomp.so.1.0.0
 
-# fix for scikit learn
-# ENV LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libgomp.so.1.0.0
+# fix for scikit learn 
+ENV LD_PRELOAD=/opt/venv/lib/python3.10/site-packages/scikit_learn.libs/libgomp-d22c30c5.so.1.0.0
 # make conda env default python env
 ENV PATH="$VENV/bin:$PATH"
 
